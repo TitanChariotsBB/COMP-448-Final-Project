@@ -103,6 +103,7 @@ def publish_info():
     msg += open(USER).readline()
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
+    print("\n")
 
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
@@ -128,6 +129,7 @@ def add_contact():
         content = json.loads(response.content)['contents']
         if id == 0:
             print(f"Could not find {name}")
+    print("\n")
 
 #
 # Lists all contacts in contacts.jsonl
@@ -137,26 +139,25 @@ def list_contacts():
     contacts = f.readlines()
     for contact in contacts:
         print(json.loads(contact)["owner"])
+    print("\n")
 
 #
 # Removes a contact from the address book
 #
-# Argument: the name of the contatct. Ex: "Christian Abbott"
-#
-def remove_contact(name):
-    # TODO: test this
-    contacts_file = open(CONTACTS, 'r')
-    lines = contacts_file.readlines()
-    new_lines: list[str]
-    count = 0
+def remove_contact():
+    name_prompt = [{'type': 'input', 'name': 'name', 'message': 'Contact to delete: '}]
+    name = prompt(name_prompt)['name']
+    f = open(CONTACTS, 'r')
+    lines = f.readlines()
+    new_lines = []
     for line in lines:
-        if "name" not in line:
-            new_lines[count] = line
-            count += 1
-    contacts_file.close()
-    contacts_file = open(CONTACTS, "w+")
+        if name not in line:
+            new_lines.append(line)
+    f.close()
+    f = open(CONTACTS, "w+")
     for line in new_lines:
-        contacts_file.write(line + "\n")
+        f.write(line + "\n")
+    print(f"Removed contact: {name}\n\n")
 
 #
 # Returns: true if user has contacts, false if not
@@ -209,6 +210,8 @@ def main():
             add_contact()
         elif action == L:
             list_contacts()
+        elif action == D:
+            remove_contact()
         else:
             print(f"You have chosen {action}")
     
