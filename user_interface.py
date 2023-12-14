@@ -4,6 +4,7 @@ from PyInquirer import prompt
 from pprint import pprint
 
 import os
+import requests
 
 import crypto_backend
 import json
@@ -18,6 +19,10 @@ D = 'Delete contact'
 C = 'Start secure chat'
 R = 'Reset all data'
 
+# File names
+USER = 'user_info.jsonl'
+CONTACTS = 'contacts.jsonl'
+
 #
 # Prints a cool opening message
 #
@@ -31,7 +36,7 @@ def opening_msg():
 #
 def has_info() -> bool:
     try:
-        return os.stat("user_info.jsonl").st_size > 0
+        return os.stat(USER).st_size > 0
     except:
         print("ERROR: cannot find `user_info.json`")
         return False
@@ -42,7 +47,7 @@ def has_info() -> bool:
 # 
 def initialize_user():
     # Creates new file or clears it if it exists
-    open("user_info.jsonl", 'w+').close()
+    open(USER, 'w+').close()
 
     print("To get started with this app, we need some information to create a keypair.")
     print("Answer the prompts below and hit enter to confirm.")
@@ -80,12 +85,22 @@ def initialize_user():
     }
     jsonified_private = json.JSONEncoder().encode(packaged_private_key)
 
-    user_info_file = open("user_info.jsonl", "w")
+    user_info_file = open(USER, "w")
     user_info_file.write(jsonified_public + "\n")
     user_info_file.write(jsonified_private + "\n")
     user_info_file.close()
 
-
+#
+# Publishes the user's contact info (name, public key) to the pastebin site
+#
+def publish_info(): 
+    msg = "Begin GCC SECA msg. CODE: pub\n"
+    # Get public key
+    msg += open(USER).readline()
+    postId = requests.post('http://cs448lnx101.gcc.edu/posts/create', 
+                           data={'contents': msg})
+    print(f"Post ID: {postId.json()['id']}")
+    
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
 #
@@ -101,15 +116,26 @@ def add_contact(name):
 # Argument: the name of the contatct. Ex: "Christian Abbott"
 #
 def remove_contact(name):
-    # TODO
-    print("TODO")
+    # TODO: test this
+    contacts_file = open(CONTACTS, 'r')
+    lines = contacts_file.readlines()
+    new_lines: list[str]
+    count = 0
+    for line in lines:
+        if "name" not in line:
+            new_lines[count] = line
+            count += 1
+    contacts_file.close()
+    contacts_file = open(CONTACTS, "w+")
+    for line in new_lines:
+        contacts_file.write(line + "\n")
 
 #
 # Returns: true if user has contacts, false if not
 #
 def has_contacts() -> bool:
     try:
-        return os.stat("contacts.jsonl").st_size > 0
+        return os.stat(CONTACTS).st_size > 0
     except:
         print("ERROR: cannot find `contacts.jsonl`")
         return False
@@ -118,8 +144,8 @@ def has_contacts() -> bool:
 # Resets all user data by clearing user_info.jsonl and contacts.jsonl
 #
 def reset_data():
-    open('user_info.jsonl', 'w').close()
-    open('contacts.jsonl', 'w').close()
+    open(USER, 'w').close()
+    open(CONTACTS, 'w').close()
     print("All data reset!")
 
 # Main method contains the main application loop
