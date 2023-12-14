@@ -40,6 +40,9 @@ def has_info() -> bool:
 # then generates an RSA keypair, then adds this information to user_info.json
 # 
 def initialize_user():
+    # Creates new file or clears it if it exists
+    open("user_info.jsonl", 'w+').close()
+    
     print("To get started with this app, we need some information to create a keypair.")
     print("Answer the prompts below and hit enter to confirm.")
     questions = [
