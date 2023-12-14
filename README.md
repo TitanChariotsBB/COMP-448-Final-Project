@@ -1,3 +1,3 @@
 # GCC SECA
 
-## Grove City College Secure Encrypted Chat App
+Grove City College Secure Encrypted Chat App
