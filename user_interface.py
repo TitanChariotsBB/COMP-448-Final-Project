@@ -5,6 +5,11 @@ from pprint import pprint
 
 import os
 
+import crypto_backend
+import json
+from base64 import b64encode, b64decode
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
+
 Q = 'Quit app'
 A = 'Add contact'
 D = 'Delete contact'
@@ -24,7 +29,7 @@ def opening_msg():
 #
 def has_info() -> bool:
     try:
-        return os.stat("user_info.json").st_size > 0
+        return os.stat("user_info.jsonl").st_size > 0
     except:
         print("ERROR: cannot find `user_info.json`")
         return False
@@ -55,8 +60,26 @@ def initialize_user():
     ]
     # JSON object of form {'first_name': 'Christian'}
     answers = prompt(questions)
-    pprint(answers)
-    # TODO: Generate keypair and add to user_info.json
+    keypair = crypto_backend.rsa_gen_keypair()
+    public_key_pem = crypto_backend.rsa_serialize_public_key(keypair.public_key())
+    packaged_public_key = {
+        'owner': answers['first_name'] + " " + answers['last_name'] + "\n",
+        'pubkey': public_key_pem
+    }
+    jsonified_public = json.JSONEncoder().encode(packaged_public_key)
+
+    private_key_pem = crypto_backend.rsa_serialize_private_key(keypair)
+    packaged_private_key = {
+        'owner': answers['first_name'] + " " + answers['last_name'] + "\n",
+        'pubkey': private_key_pem
+    }
+    jsonified_private = json.JSONEncoder().encode(packaged_private_key)
+
+    user_info_file = open("user_info.jsonl", "w")
+    user_info_file.write(jsonified_public)
+    user_info_file.write(jsonified_private)
+    user_info_file.close()
+
 
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
@@ -85,6 +108,14 @@ def has_contacts() -> bool:
     except:
         print("ERROR: cannot find `contacts.jsonl`")
         return False
+    
+#
+# Resets all user data by clearing user_info.jsonl and contacts.jsonl
+#
+def reset_data():
+    open('user_info.jsonl', 'w').close()
+    open('contacts.jsonl', 'w').close()
+    print("All data reset!")
 
 def main():
     has_quit = False
@@ -106,10 +137,14 @@ def main():
             }
         ]
 
-        chosen_action = prompt(main_menu_options)['action']
-        if chosen_action == Q: has_quit = True
-
-        print(f"You have chosen {chosen_action}")
+        action = prompt(main_menu_options)['action']
+        if action == Q: 
+            has_quit = True
+        elif action == R: 
+            reset_data()
+            initialize_user()
+        else:
+            print(f"You have chosen {action}")
     
         
 
