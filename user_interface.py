@@ -19,9 +19,10 @@ D = 'Delete contact'
 C = 'Start secure chat'
 R = 'Reset all data'
 
-# File names
+# URLs
 USER = 'user_info.jsonl'
 CONTACTS = 'contacts.jsonl'
+PASTEBIN = 'http://cs448lnx101.gcc.edu/posts/create'
 
 #
 # Prints a cool opening message
@@ -97,10 +98,9 @@ def publish_info():
     msg = "Begin GCC SECA msg. CODE: pub\n"
     # Get public key
     msg += open(USER).readline()
-    postId = requests.post('http://cs448lnx101.gcc.edu/posts/create', 
-                           data={'contents': msg})
+    postId = requests.post(PASTEBIN, data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
-    
+
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
 #
@@ -175,6 +175,8 @@ def main():
         elif action == R: 
             reset_data()
             initialize_user()
+        elif action == P:
+            publish_info()
         else:
             print(f"You have chosen {action}")
     
