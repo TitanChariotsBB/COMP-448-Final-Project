@@ -5,6 +5,12 @@ from pprint import pprint
 
 import os
 
+Q = 'Quit app'
+A = 'Add contact'
+D = 'Delete contact'
+C = 'Start secure chat'
+R = 'Reset all data'
+
 #
 # Prints a cool opening message
 #
@@ -87,9 +93,9 @@ def main():
 
     if not has_info(): initialize_user()
 
-    while (not has_quit):
-        if not has_contacts(): list_of_actions = ['Add contact', 'Reset all data', 'Quit app']
-        else: list_of_actions = ['Add contact', 'Delete contact', 'Start secure chat', 'Reset all data', 'Quit app']
+    while not has_quit:
+        if not has_contacts(): list_of_actions = [A, R, Q]
+        else: list_of_actions = [C, A, D, R, Q]
 
         main_menu_options = [
             {
@@ -101,7 +107,7 @@ def main():
         ]
 
         chosen_action = prompt(main_menu_options)['action']
-        if (chosen_action == "Quit app"): has_quit = True
+        if chosen_action == Q: has_quit = True
 
         print(f"You have chosen {chosen_action}")
     
