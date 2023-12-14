@@ -7,6 +7,7 @@ import os
 import requests
 
 import crypto_backend
+import messages
 import json
 from base64 import b64encode, b64decode
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
@@ -17,10 +18,12 @@ A = 'Add contact'
 P = 'Publish contact info'
 L = 'List contacts'
 D = 'Delete contact'
-C = 'Start secure chat'
+S = 'Send message'
+F = 'Fetch latest message'
 R = 'Reset all data'
 
 PUBLISH_FLAG = 'Begin GCC SECA msg. CODE: pub\n'
+MESSAGE_FLAG = 'Begin GCC SECA msg. CODE: msg\n'
 
 # URLs
 USER = 'user_info.jsonl'
@@ -85,7 +88,7 @@ def initialize_user():
     private_key_pem = crypto_backend.rsa_serialize_private_key(keypair)
     packaged_private_key = {
         'owner': answers['first_name'] + " " + answers['last_name'],
-        'pubkey': private_key_pem
+        'privkey': private_key_pem
     }
     jsonified_private = json.JSONEncoder().encode(packaged_private_key)
 
@@ -152,16 +155,36 @@ def list_contacts():
     print("\n")
 
 #
+# Returns the serialized public key of the given contact
+#
+def get_contact_public_key(contact_name):
+    f = open(CONTACTS, "r")
+    contacts_json = f.readlines()
+    f.close()
+    for contact in contacts_json:
+        if json.loads(contact)["owner"] == contact_name:
+            return json.loads(contact)["pubkey"]
+
+#
+# Returns the user's private key
+#
+def get_private_key():
+    f = open(USER, "r")
+    f.readline() # Move past pubkey
+    private_key = json.loads(f.readline())["privkey"]
+    f.close()
+    return private_key
+
+#
 # Removes a contact from the address book
 #
 def remove_contact():
-    choices = list_of_contacts()
     name_prompt = [
         {
             'type': 'list', 
             'name': 'name', 
             'message': 'Contact to delete: ',
-            'choices': choices
+            'choices': list_of_contacts()
         }
     ]
     name = prompt(name_prompt)['name']
@@ -188,6 +211,41 @@ def has_contacts() -> bool:
         return False
     
 #
+# Gets user input and calls messages' send_message function with the necessary keys
+#
+def send_message():
+    message_prompt = [
+        {
+            'type': 'list',
+            'name': 'recipient',
+            'message': 'Recipient:',
+            'choices': list_of_contacts()
+        },
+        {
+            'type': 'input',
+            'name': 'text',
+            'message': 'Message:',
+        }
+    ]
+    message_data = prompt(message_prompt)
+    recipient = message_data['recipient']
+    message = str(message_data['text'])
+
+    recipient_public_key = get_contact_public_key(recipient)
+    sender_private_key = get_private_key()
+
+    message_data = messages.encrypt_message(
+        sender_private_key_pem = sender_private_key, 
+        recipient_public_key_pem = recipient_public_key, 
+        message = message
+    )
+
+    msg = MESSAGE_FLAG + f"RECIPIENT: {recipient}\n" + message_data
+
+    postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
+    print(f"Post ID: {postId.json()['id']}")
+    
+#
 # Resets all user data by clearing user_info.jsonl and contacts.jsonl
 #
 def reset_data():
@@ -205,7 +263,7 @@ def main():
 
     while not has_quit:
         if not has_contacts(): list_of_actions = [P, A, R, Q]
-        else: list_of_actions = [C, P, A, L, D, R, Q]
+        else: list_of_actions = [S, F, P, A, L, D, R, Q]
 
         main_menu_options = [
             {
@@ -230,6 +288,8 @@ def main():
             list_contacts()
         elif action == D:
             remove_contact()
+        elif action == S:
+            send_message()
         else:
             print(f"You have chosen {action}")
     

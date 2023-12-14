@@ -42,7 +42,7 @@ def rsa_serialize_private_key(private_key):
 # Returns: An rsa.RSAPrivateKey object consisting of the deserialized key.
 #
 def rsa_deserialize_private_key(pem_privkey):
-    private_key = serialization.load_pem_private_key(pem_privkey.encode('ASCII'))
+    private_key = serialization.load_pem_private_key(pem_privkey.encode('ASCII'), None)
     return private_key
 
 #
