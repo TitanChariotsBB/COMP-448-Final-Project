@@ -59,7 +59,7 @@ def encrypt_message(sender_private_key_pem, recipient_public_key_pem, message):
     # requests.post(PASTEBIN, data={jsonified})
 
 
-def receive_message(sender_public_key, signature, encrypted_message, encrypted_session_key, nonce, receiver_private_key):
+def decrypt_message(sender_public_key, signature, encrypted_message, encrypted_session_key, nonce, receiver_private_key):
     # verify message using RSA verify
     crypto_backend.verify_message(sender_public_key, signature, encrypted_message)
     

@@ -98,6 +98,15 @@ def initialize_user():
     user_info_file.close()
 
 #
+# Returns user's name
+#
+def get_user_name():
+    f = open(USER)
+    user_name = str(json.loads(f.readline())["owner"])
+    f.close()
+    return user_name
+
+#
 # Publishes the user's contact info (name, public key) to the pastebin site
 #
 def publish_info(): 
@@ -211,7 +220,8 @@ def has_contacts() -> bool:
         return False
     
 #
-# Gets user input and calls messages' send_message function with the necessary keys
+# Gets user input and calls messages' send_message function 
+#   with the necessary keys
 #
 def send_message():
     message_prompt = [
@@ -244,7 +254,30 @@ def send_message():
 
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
-    
+
+#
+# Scans the pastebin for the latest message addressed to the user, 
+#   then decrypts and displays it
+#
+def fetch_message():
+    message_found = False;
+    response = requests.get(PASTEBIN + '/posts/get/latest')
+    id = int(json.loads(response.content)['posts'][0]['id'])
+    content = json.loads(response.content)['posts'][0]['contents']
+    while not message_found:
+        if MESSAGE_FLAG in content: 
+            if f"RECIPIENT: {get_user_name()}" in content:
+                message_found = True
+                encrypted_message = content
+                break
+        id -= 1
+        response = requests.get(PASTEBIN + f'/posts/view/{id}')
+        content = json.loads(response.content)['contents']
+        if id == 0:
+            print(f"Could not find any messages")
+            return
+    print(encrypted_message)
+
 #
 # Resets all user data by clearing user_info.jsonl and contacts.jsonl
 #
@@ -290,6 +323,8 @@ def main():
             remove_contact()
         elif action == S:
             send_message()
+        elif action == F:
+            fetch_message()
         else:
             print(f"You have chosen {action}")
     
