@@ -138,7 +138,8 @@ def add_contact():
                 break
         id -= 1
         response = requests.get(PASTEBIN + f'/posts/view/{id}')
-        content = json.loads(response.content)['contents']
+        if not json.loads(response.content)['error']: 
+            content = json.loads(response.content)['contents']
         if id == 0:
             print(f"Could not find {name}")
     print("\n")
@@ -173,6 +174,8 @@ def get_contact_public_key(contact_name):
     for contact in contacts_json:
         if json.loads(contact)["owner"] == contact_name:
             return json.loads(contact)["pubkey"]
+    # This should probably throw an exception
+    return None
 
 #
 # Returns the user's private key
@@ -250,7 +253,8 @@ def send_message():
         message = message
     )
 
-    msg = MESSAGE_FLAG + f"RECIPIENT: {recipient}\n" + message_data
+    msg = MESSAGE_FLAG + f"RECIPIENT: {recipient}\n" + \
+          f"SENDER: {get_user_name()}" + message_data
 
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
@@ -261,6 +265,7 @@ def send_message():
 #
 def fetch_message():
     message_found = False;
+    sender = ""
     response = requests.get(PASTEBIN + '/posts/get/latest')
     id = int(json.loads(response.content)['posts'][0]['id'])
     content = json.loads(response.content)['posts'][0]['contents']
@@ -268,15 +273,24 @@ def fetch_message():
         if MESSAGE_FLAG in content: 
             if f"RECIPIENT: {get_user_name()}" in content:
                 message_found = True
-                encrypted_message = content
+                message = content
+                lines = message.split("\n")
+                sender = lines[2]
+                json_bundle = lines[3]
                 break
         id -= 1
         response = requests.get(PASTEBIN + f'/posts/view/{id}')
-        content = json.loads(response.content)['contents']
+        if not json.loads(response.content)['error']:
+            content = json.loads(response.content)['contents']
         if id == 0:
             print(f"Could not find any messages")
             return
-    print(encrypted_message)
+    print(json_bundle)
+
+    sender_public_key = get_contact_public_key(sender)
+    recipient_private_key = get_private_key()
+    
+
 
 #
 # Resets all user data by clearing user_info.jsonl and contacts.jsonl
