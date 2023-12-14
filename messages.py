@@ -54,22 +54,22 @@ def encrypt_message(sender_private_key_pem, recipient_public_key_pem, message):
 
     return jsonified
 
-    # post to pastebin with header that includes incrementing value to indicate order of
-    # messages in the conversation
-    # requests.post(PASTEBIN, data={jsonified})
-
-
 def decrypt_message(sender_public_key, signature, encrypted_message, encrypted_session_key, nonce, receiver_private_key):
+    try:
     # verify message using RSA verify
-    crypto_backend.verify_message(sender_public_key, signature, encrypted_message)
+        crypto_backend.verify_message(sender_public_key, signature, encrypted_message)
+    except:
+        return ("This message is not verified as from the expected sender")
+    else:
+        # decrypt session key with RSA decrypt
+        session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
+
+        # decrypt message with decrypted session key
+        plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
+
+        return plaintext
+
     
-    # decrypt session key with RSA decrypt
-    session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
-
-    # decrypt message with decrypted session key
-    plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
-
-    print(plaintext)
 
 
 
