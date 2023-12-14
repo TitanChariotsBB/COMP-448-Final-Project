@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPubl
 # App actions
 Q = 'Quit app'
 A = 'Add contact'
+P = 'Publish contact info'
 D = 'Delete contact'
 C = 'Start secure chat'
 R = 'Reset all data'
@@ -42,7 +43,7 @@ def has_info() -> bool:
 def initialize_user():
     # Creates new file or clears it if it exists
     open("user_info.jsonl", 'w+').close()
-    
+
     print("To get started with this app, we need some information to create a keypair.")
     print("Answer the prompts below and hit enter to confirm.")
     questions = [
@@ -130,8 +131,8 @@ def main():
     if not has_info(): initialize_user()
 
     while not has_quit:
-        if not has_contacts(): list_of_actions = [A, R, Q]
-        else: list_of_actions = [C, A, D, R, Q]
+        if not has_contacts(): list_of_actions = [P, A, R, Q]
+        else: list_of_actions = [C, P, A, D, R, Q]
 
         main_menu_options = [
             {
