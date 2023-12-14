@@ -10,6 +10,7 @@ import json
 from base64 import b64encode, b64decode
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 
+# App actions
 Q = 'Quit app'
 A = 'Add contact'
 D = 'Delete contact'
@@ -63,21 +64,21 @@ def initialize_user():
     keypair = crypto_backend.rsa_gen_keypair()
     public_key_pem = crypto_backend.rsa_serialize_public_key(keypair.public_key())
     packaged_public_key = {
-        'owner': answers['first_name'] + " " + answers['last_name'] + "\n",
+        'owner': answers['first_name'] + " " + answers['last_name'],
         'pubkey': public_key_pem
     }
     jsonified_public = json.JSONEncoder().encode(packaged_public_key)
 
     private_key_pem = crypto_backend.rsa_serialize_private_key(keypair)
     packaged_private_key = {
-        'owner': answers['first_name'] + " " + answers['last_name'] + "\n",
+        'owner': answers['first_name'] + " " + answers['last_name'],
         'pubkey': private_key_pem
     }
     jsonified_private = json.JSONEncoder().encode(packaged_private_key)
 
     user_info_file = open("user_info.jsonl", "w")
-    user_info_file.write(jsonified_public)
-    user_info_file.write(jsonified_private)
+    user_info_file.write(jsonified_public + "\n")
+    user_info_file.write(jsonified_private + "\n")
     user_info_file.close()
 
 
@@ -117,6 +118,7 @@ def reset_data():
     open('contacts.jsonl', 'w').close()
     print("All data reset!")
 
+# Main method contains the main application loop
 def main():
     has_quit = False
 
