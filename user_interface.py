@@ -132,20 +132,38 @@ def add_contact():
     print("\n")
 
 #
+# Returns a list of all contacts in contacts.jsonl
+#
+def list_of_contacts() -> "list[str]":
+    contacts = []
+    f = open(CONTACTS, "r")
+    contacts_json = f.readlines()
+    f.close()
+    for contact in contacts_json:
+        contacts.append(str(json.loads(contact)["owner"]))
+    return contacts
+
+#
 # Lists all contacts in contacts.jsonl
 #
 def list_contacts():
-    f = open(CONTACTS, "r")
-    contacts = f.readlines()
-    for contact in contacts:
-        print(json.loads(contact)["owner"])
+    for contact in list_of_contacts():
+        print(contact)
     print("\n")
 
 #
 # Removes a contact from the address book
 #
 def remove_contact():
-    name_prompt = [{'type': 'input', 'name': 'name', 'message': 'Contact to delete: '}]
+    choices = list_of_contacts()
+    name_prompt = [
+        {
+            'type': 'list', 
+            'name': 'name', 
+            'message': 'Contact to delete: ',
+            'choices': choices
+        }
+    ]
     name = prompt(name_prompt)['name']
     f = open(CONTACTS, 'r')
     lines = f.readlines()
