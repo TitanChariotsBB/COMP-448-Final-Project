@@ -15,14 +15,17 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPubl
 Q = 'Quit app'
 A = 'Add contact'
 P = 'Publish contact info'
+L = 'List contacts'
 D = 'Delete contact'
 C = 'Start secure chat'
 R = 'Reset all data'
 
+PUBLISH_FLAG = 'Begin GCC SECA msg. CODE: pub\n'
+
 # URLs
 USER = 'user_info.jsonl'
 CONTACTS = 'contacts.jsonl'
-PASTEBIN = 'http://cs448lnx101.gcc.edu/posts/create'
+PASTEBIN = 'http://cs448lnx101.gcc.edu'
 
 #
 # Prints a cool opening message
@@ -95,20 +98,45 @@ def initialize_user():
 # Publishes the user's contact info (name, public key) to the pastebin site
 #
 def publish_info(): 
-    msg = "Begin GCC SECA msg. CODE: pub\n"
+    msg = PUBLISH_FLAG
     # Get public key
     msg += open(USER).readline()
-    postId = requests.post(PASTEBIN, data={'contents': msg})
+    postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
 
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
-#
-# Argument: the name of the public key to search for. Ex: "Christian Abbott"
 # 
-def add_contact(name):
-    # TODO
-    print("TODO")
+def add_contact():
+    contact_found = False
+    name_prompt = [{'type': 'input', 'name': 'name', 'message': 'Name to search for: '}]
+    name = prompt(name_prompt)['name']
+    response = requests.get(PASTEBIN + '/posts/get/latest')
+    id = int(json.loads(response.content)['posts'][0]['id'])
+    content = json.loads(response.content)['posts'][0]['contents']
+    while not contact_found:
+        if PUBLISH_FLAG in content: 
+            if name in content:
+                contact_found = True
+                f = open(CONTACTS, 'a')
+                f.write(content.replace(PUBLISH_FLAG, ""))
+                f.close()
+                print(f"Added contact: {name}")
+                break
+        id -= 1
+        response = requests.get(PASTEBIN + f'/posts/view/{id}')
+        content = json.loads(response.content)['contents']
+        if id == 0:
+            print(f"Could not find {name}")
+
+#
+# Lists all contacts in contacts.jsonl
+#
+def list_contacts():
+    f = open(CONTACTS, "r")
+    contacts = f.readlines()
+    for contact in contacts:
+        print(json.loads(contact)["owner"])
 
 #
 # Removes a contact from the address book
@@ -158,7 +186,7 @@ def main():
 
     while not has_quit:
         if not has_contacts(): list_of_actions = [P, A, R, Q]
-        else: list_of_actions = [C, P, A, D, R, Q]
+        else: list_of_actions = [C, P, A, L, D, R, Q]
 
         main_menu_options = [
             {
@@ -177,6 +205,10 @@ def main():
             initialize_user()
         elif action == P:
             publish_info()
+        elif action == A:
+            add_contact()
+        elif action == L:
+            list_contacts()
         else:
             print(f"You have chosen {action}")
     
