@@ -66,16 +66,16 @@ def decrypt_message(sender_public_key_pem, signature, encrypted_message,
     encrypted_message = b64decode(encrypted_message, validate = True)
     signature = b64decode(signature, validate = True)
 
-    #try:
+    try:
         # verify message using RSA verify
-    verify_message(sender_public_key, signature, encrypted_message)
-    # except:
-    #     return ("This message is not verified as from the expected sender")
+        verify_message(sender_public_key, signature, encrypted_message)
+    except:
+        print("This message is not verified as from the expected sender")
     # else:
-        # decrypt session key with RSA decrypt
+    # decrypt session key with RSA decrypt
     session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
 
-        # decrypt message with decrypted session key
+    # decrypt message with decrypted session key
     plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
 
     return plaintext
