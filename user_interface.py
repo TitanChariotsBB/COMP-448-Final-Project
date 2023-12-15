@@ -30,6 +30,9 @@ USER = 'user_info.jsonl'
 CONTACTS = 'contacts.jsonl'
 PASTEBIN = 'http://cs448lnx101.gcc.edu'
 
+user_info = []
+contacts = []
+
 #
 # Prints a cool opening message
 #
@@ -58,41 +61,30 @@ def initialize_user():
     open(USER, 'w+').close()
 
     print("To get started with this app, we need some information to create a keypair.")
-    print("Answer the prompts below and hit enter to confirm.")
-    questions = [
+    print("Answer the prompt below and hit enter to confirm.")
+    question = [
         {
             'type': 'input',
-            'name': 'first_name',
-            'message': 'First name:',
-        },
-        {
-            'type': 'input',
-            'name': 'last_name',
-            'message': 'Last name:',
-        },
-        {
-            'type': 'input',
-            'name': 'ver_code',
-            'message': 'Verification code:',
+            'name': 'user_name',
+            'message': 'Your name (will be displayed publicly): ',
         }
     ]
     # JSON object of form {'first_name': 'Christian'}
-    answers = prompt(questions)
+    answers = prompt(question)
     keypair = crypto_backend.rsa_gen_keypair()
     public_key_pem = crypto_backend.rsa_serialize_public_key(keypair.public_key())
     packaged_public_key = {
-        'owner': answers['first_name'] + " " + answers['last_name'],
+        'owner': answers['user_name'],
         'pubkey': public_key_pem
     }
     jsonified_public = json.JSONEncoder().encode(packaged_public_key)
 
     private_key_pem = crypto_backend.rsa_serialize_private_key(keypair)
     packaged_private_key = {
-        'owner': answers['first_name'] + " " + answers['last_name'],
+        'owner': answers['user_name'],
         'privkey': private_key_pem
     }
     jsonified_private = json.JSONEncoder().encode(packaged_private_key)
-
     user_info_file = open(USER, "w")
     user_info_file.write(jsonified_public + "\n")
     user_info_file.write(jsonified_private + "\n")
@@ -100,13 +92,19 @@ def initialize_user():
     print()
 
 #
+# Loads user info (from user_info.jsonl) into a list of json objects
+#
+def load_user_info():
+    f = open(USER, 'r')
+    lines = f.readlines()
+    for line in lines:
+        user_info.append(json.loads(line))
+
+#
 # Returns user's name
 #
 def get_user_name():
-    f = open(USER)
-    user_name = str(json.loads(f.readline())["owner"])
-    f.close()
-    return user_name
+    return user_info[0]["owner"]
 
 #
 # Publishes the user's contact info (name, public key) to the pastebin site
@@ -114,10 +112,23 @@ def get_user_name():
 def publish_info(): 
     msg = PUBLISH_FLAG
     # Get public key
-    msg += open(USER).readline()
+    msg = json.JSONEncoder().encode(user_info[0])
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
     print()
+
+def load_contacts():
+    if (os.stat(CONTACTS).st_size > 0):
+        f = open(CONTACTS, 'r')
+        lines = f.readlines()
+        for line in lines:
+            print("Reading line")
+            contacts.append(json.loads(line))
+
+def write_contacts():
+    f = open(CONTACTS, 'w')
+    for contact in contacts:
+        f.write(json.JSONEncoder().encode(contact) + "\n")
 
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
@@ -126,43 +137,38 @@ def add_contact():
     contact_found = False
     name_prompt = [{'type': 'input', 'name': 'name', 'message': 'Name to search for: '}]
     name = prompt(name_prompt)['name']
-    response = requests.get(PASTEBIN + '/posts/get/latest')
-    id = int(json.loads(response.content)['posts'][0]['id'])
-    content = json.loads(response.content)['posts'][0]['contents']
+    response = json.loads(requests.get(PASTEBIN + '/posts/get/latest').content)
+    id = int(response['posts'][0]['id'])
+    content = response['posts'][0]['contents']
     while not contact_found:
         if PUBLISH_FLAG in content: 
             if name in content:
                 contact_found = True
-                f = open(CONTACTS, 'a')
-                f.write(content.replace(PUBLISH_FLAG, ""))
-                f.close()
+                contacts.append(json.loads(content.replace(PUBLISH_FLAG, "")))
                 print(f"Added contact: {name}")
                 break
         id -= 1
-        response = requests.get(PASTEBIN + f'/posts/view/{id}')
-        if not json.loads(response.content)['error']: 
-            content = json.loads(response.content)['contents']
+        response = json.loads(requests.get(PASTEBIN + f'/posts/view/{id}').content)
+        if not response['error']: 
+            content = response['contents']
         if id == 0:
             print(f"Could not find {name}")
     print()
 
 #
-# Returns a list of all contacts in contacts.jsonl
+# Returns a list of all contact names in the contacts array
 #
-def list_of_contacts() -> "list[str]":
-    contacts = []
-    f = open(CONTACTS, "r")
-    contacts_json = f.readlines()
-    f.close()
-    for contact in contacts_json:
-        contacts.append(str(json.loads(contact)["owner"]))
-    return contacts
+def list_of_contact_names() -> "list[str]":
+    contact_names = []
+    for contact in contacts:
+        contact_names.append(contact["owner"])
+    return contact_names
 
 #
 # Lists all contacts in contacts.jsonl
 #
 def list_contacts():
-    for contact in list_of_contacts():
+    for contact in list_of_contact_names():
         print(contact)
     print()
 
@@ -170,12 +176,9 @@ def list_contacts():
 # Returns the serialized public key of the given contact
 #
 def get_contact_public_key(contact_name):
-    f = open(CONTACTS, "r")
-    contacts_json = f.readlines()
-    f.close()
-    for contact in contacts_json:
-        if json.loads(contact)["owner"] == contact_name:
-            return json.loads(contact)["pubkey"]
+    for contact in contacts:
+        if contact["owner"] == contact_name:
+            return contact["pubkey"]
     # This should probably throw an exception
     return None
 
@@ -183,20 +186,13 @@ def get_contact_public_key(contact_name):
 # Returns the user's public key
 #
 def get_public_key():
-    f = open(USER, "r")
-    public_key = json.loads(f.readline())["pubkey"]
-    f.close()
-    return public_key
+    return user_info[0]["pubkey"]
 
 #
 # Returns the user's private key
 #
 def get_private_key():
-    f = open(USER, "r")
-    f.readline() # Move past pubkey
-    private_key = json.loads(f.readline())["privkey"]
-    f.close()
-    return private_key
+    return user_info[1]["privkey"]
 
 #
 # Removes a contact from the address book
@@ -207,20 +203,12 @@ def remove_contact():
             'type': 'list', 
             'name': 'name', 
             'message': 'Contact to delete: ',
-            'choices': list_of_contacts()
+            'choices': list_of_contact_names()
         }
     ]
     name = prompt(name_prompt)['name']
-    f = open(CONTACTS, 'r')
-    lines = f.readlines()
-    new_lines = []
-    for line in lines:
-        if name not in line:
-            new_lines.append(line)
-    f.close()
-    f = open(CONTACTS, "w+")
-    for line in new_lines:
-        f.write(line + "\n")
+    for contact in contacts:
+        if contact["owner"] == name: contacts.remove(contact)
     print(f"Removed contact: {name}\n\n")
     print()
 
@@ -228,12 +216,7 @@ def remove_contact():
 # Returns: true if user has contacts, false if not
 #
 def has_contacts() -> bool:
-    try:
-        return os.stat(CONTACTS).st_size > 0
-    except:
-        print("ERROR: cannot find `contacts.jsonl`")
-        print()
-        return False
+    return len(contacts) > 0
     
 #
 # Gets user input and calls messages' send_message function 
@@ -245,7 +228,7 @@ def send_message():
             'type': 'list',
             'name': 'recipient',
             'message': 'Recipient:',
-            'choices': list_of_contacts()
+            'choices': list_of_contact_names()
         },
         {
             'type': 'input',
@@ -336,6 +319,8 @@ def main():
     opening_msg()
 
     if not has_info(): initialize_user()
+    load_user_info()
+    load_contacts()
 
     while not has_quit:
         if not has_contacts(): list_of_actions = [P, A, R, Q]
@@ -353,9 +338,11 @@ def main():
         action = prompt(main_menu_options)['action']
         if action == Q: 
             has_quit = True
+            write_contacts()
         elif action == R: 
             reset_data()
             initialize_user()
+            load_user_info()
         elif action == P:
             publish_info()
         elif action == A:
