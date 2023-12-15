@@ -112,7 +112,7 @@ def get_user_name():
 def publish_info(): 
     msg = PUBLISH_FLAG
     # Get public key
-    msg = json.JSONEncoder().encode(user_info[0])
+    msg = PUBLISH_FLAG + "\n" + json.JSONEncoder().encode(user_info[0])
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
     print()
