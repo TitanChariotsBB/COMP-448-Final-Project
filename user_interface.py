@@ -46,6 +46,7 @@ def has_info() -> bool:
         return os.stat(USER).st_size > 0
     except:
         print("ERROR: cannot find `user_info.json`")
+        print()
         return False
 
 #
@@ -96,6 +97,7 @@ def initialize_user():
     user_info_file.write(jsonified_public + "\n")
     user_info_file.write(jsonified_private + "\n")
     user_info_file.close()
+    print()
 
 #
 # Returns user's name
@@ -115,7 +117,7 @@ def publish_info():
     msg += open(USER).readline()
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
-    print("\n")
+    print()
 
 #
 # Adds a contact (name and public key) to the contacts.jsonl address book
@@ -142,7 +144,7 @@ def add_contact():
             content = json.loads(response.content)['contents']
         if id == 0:
             print(f"Could not find {name}")
-    print("\n")
+    print()
 
 #
 # Returns a list of all contacts in contacts.jsonl
@@ -162,7 +164,7 @@ def list_of_contacts() -> "list[str]":
 def list_contacts():
     for contact in list_of_contacts():
         print(contact)
-    print("\n")
+    print()
 
 #
 # Returns the serialized public key of the given contact
@@ -220,6 +222,7 @@ def remove_contact():
     for line in new_lines:
         f.write(line + "\n")
     print(f"Removed contact: {name}\n\n")
+    print()
 
 #
 # Returns: true if user has contacts, false if not
@@ -229,6 +232,7 @@ def has_contacts() -> bool:
         return os.stat(CONTACTS).st_size > 0
     except:
         print("ERROR: cannot find `contacts.jsonl`")
+        print()
         return False
     
 #
@@ -266,7 +270,9 @@ def send_message():
           f"SENDER: {get_user_name()}\n" + message_data
 
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
-    print(f"Post ID: {postId.json()['id']}")
+    print("Message sent successfully!")
+    # print(f"Post ID: {postId.json()['id']}")
+    print()
 
 #
 # Scans the pastebin for the latest message addressed to the user, 
@@ -310,7 +316,7 @@ def fetch_message():
     )).decode("utf-8")
 
     print(f"---\nMessage from {sender}: {plain_text}\n---")
-    print("\n")
+    print()
 
 
 
@@ -321,6 +327,7 @@ def reset_data():
     open(USER, 'w').close()
     open(CONTACTS, 'w').close()
     print("All data reset!")
+    print()
 
 # Main method contains the main application loop
 def main():
