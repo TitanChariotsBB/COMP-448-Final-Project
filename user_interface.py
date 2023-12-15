@@ -294,8 +294,8 @@ def fetch_message():
         if id == 0:
             print(f"Could not find any messages")
             return
-    print("Sender: " + sender)
-    print("JSON bundle: " + str(json_bundle))
+    # print("Sender: " + sender)
+    # print("JSON bundle: " + str(json_bundle))
 
     sender_public_key = get_contact_public_key(sender)
     recipient_private_key = get_private_key()
@@ -309,8 +309,9 @@ def fetch_message():
         receiver_private_key_pem = recipient_private_key
     )).decode("utf-8")
 
-    print(plain_text)
-    
+    print(f"Message from {sender}: {plain_text}")
+    print("\n")
+
 
 
 #
