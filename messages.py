@@ -37,10 +37,7 @@ def encrypt_message(sender_private_key_pem, recipient_public_key_pem, message):
     to_sign: bytes = encrypted_message + nonce + encrypted_session_key
 
     # sign encrypted message with sender's private key
-    signature = sign_message(
-        to_sign, 
-        sender_private_key
-    )
+    signature = sign_message(to_sign, sender_private_key)
 
     # create json object with message info
     packaged_message = {
@@ -66,9 +63,12 @@ def decrypt_message(sender_public_key_pem, signature, encrypted_message,
     encrypted_message = b64decode(encrypted_message, validate = True)
     signature = b64decode(signature, validate = True)
 
+    # concatenate encrypted_message, nonce, and encrypted session key
+    to_verify: bytes = encrypted_message + nonce + encrypted_session_key
+
     try:
         # verify message using RSA verify
-        verify_message(sender_public_key, signature, encrypted_message)
+        verify_message(sender_public_key, signature, to_verify)
     except:
         print("This message is not verified as from the expected sender")
     # else:

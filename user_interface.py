@@ -239,8 +239,8 @@ def send_message():
     recipient = message_data['recipient']
     message = str(message_data['text'])
 
-    recipient_public_key = get_contact_public_key(recipient)
-    sender_private_key = get_private_key()
+    recipient_public_key = get_contact_public_key(recipient) # for encryption
+    sender_private_key = get_private_key() # for signing
 
     message_data = messages.encrypt_message(
         sender_private_key_pem = sender_private_key, 
@@ -285,8 +285,8 @@ def fetch_message():
     # print("Sender: " + sender)
     # print("JSON bundle: " + str(json_bundle))
 
-    sender_public_key = get_contact_public_key(sender)
-    recipient_private_key = get_private_key()
+    sender_public_key = get_contact_public_key(sender) # for verification
+    recipient_private_key = get_private_key() # for decryption
 
     plain_text = (messages.decrypt_message(
         sender_public_key_pem = sender_public_key,
