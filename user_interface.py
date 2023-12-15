@@ -300,14 +300,14 @@ def fetch_message():
     sender_public_key = get_contact_public_key(sender)
     recipient_private_key = get_private_key()
 
-    plain_text = str(messages.decrypt_message(
+    plain_text = (messages.decrypt_message(
         sender_public_key_pem = sender_public_key,
         signature = json_bundle["signature"],
         encrypted_message = json_bundle["ciphertext"],
         encrypted_session_key = json_bundle["sessionkey"],
         nonce = json_bundle["nonce"],
         receiver_private_key_pem = recipient_private_key
-    ))
+    )).decode("utf-8")
 
     print(plain_text)
     
