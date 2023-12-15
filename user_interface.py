@@ -309,7 +309,7 @@ def fetch_message():
         receiver_private_key_pem = recipient_private_key
     )).decode("utf-8")
 
-    print(f"Message from {sender}: {plain_text}")
+    print(f"---\nMessage from {sender}: {plain_text}\n---")
     print("\n")
 
 
