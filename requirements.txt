@@ -1,0 +1,5 @@
+cryptography==41.0.5
+cryptography==2.8
+pyfiglet==0.8.post1
+PyInquirer==1.0.3
+Requests==2.31.0
