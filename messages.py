@@ -54,20 +54,31 @@ def encrypt_message(sender_private_key_pem, recipient_public_key_pem, message):
 
     return jsonified
 
-def decrypt_message(sender_public_key, signature, encrypted_message, encrypted_session_key, nonce, receiver_private_key):
-    try:
-    # verify message using RSA verify
-        crypto_backend.verify_message(sender_public_key, signature, encrypted_message)
-    except:
-        return ("This message is not verified as from the expected sender")
-    else:
+def decrypt_message(sender_public_key_pem, signature, encrypted_message, 
+                    encrypted_session_key, nonce, receiver_private_key_pem):
+    # deserialize keys
+    receiver_private_key = crypto_backend.rsa_deserialize_private_key(receiver_private_key_pem)
+    sender_public_key = crypto_backend.rsa_deserialize_public_key(sender_public_key_pem)
+
+    # decode other pieces
+    encrypted_session_key = b64decode(encrypted_session_key, validate = True)
+    nonce = b64decode(nonce, validate = True)
+    encrypted_message = b64decode(encrypted_message, validate = True)
+    signature = b64decode(signature, validate = True)
+
+    #try:
+        # verify message using RSA verify
+    verify_message(sender_public_key, signature, encrypted_message)
+    # except:
+    #     return ("This message is not verified as from the expected sender")
+    # else:
         # decrypt session key with RSA decrypt
-        session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
+    session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
 
         # decrypt message with decrypted session key
-        plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
+    plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
 
-        return plaintext
+    return plaintext
 
     
 

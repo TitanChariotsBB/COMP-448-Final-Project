@@ -178,6 +178,15 @@ def get_contact_public_key(contact_name):
     return None
 
 #
+# Returns the user's public key
+#
+def get_public_key():
+    f = open(USER, "r")
+    public_key = json.loads(f.readline())["pubkey"]
+    f.close()
+    return public_key
+
+#
 # Returns the user's private key
 #
 def get_private_key():
@@ -254,7 +263,7 @@ def send_message():
     )
 
     msg = MESSAGE_FLAG + f"RECIPIENT: {recipient}\n" + \
-          f"SENDER: {get_user_name()}" + message_data
+          f"SENDER: {get_user_name()}\n" + message_data
 
     postId = requests.post(PASTEBIN + '/posts/create', data={'contents': msg})
     print(f"Post ID: {postId.json()['id']}")
@@ -275,8 +284,8 @@ def fetch_message():
                 message_found = True
                 message = content
                 lines = message.split("\n")
-                sender = lines[2]
-                json_bundle = lines[3]
+                sender = lines[2].replace("SENDER: ", "")
+                json_bundle = json.loads(lines[3])
                 break
         id -= 1
         response = requests.get(PASTEBIN + f'/posts/view/{id}')
@@ -285,10 +294,22 @@ def fetch_message():
         if id == 0:
             print(f"Could not find any messages")
             return
-    print(json_bundle)
+    print("Sender: " + sender)
+    print("JSON bundle: " + str(json_bundle))
 
     sender_public_key = get_contact_public_key(sender)
     recipient_private_key = get_private_key()
+
+    plain_text = messages.decrypt_message(
+        sender_public_key_pem = sender_public_key,
+        signature = json_bundle["signature"],
+        encrypted_message = json_bundle["ciphertext"],
+        encrypted_session_key = json_bundle["sessionkey"],
+        nonce = json_bundle["nonce"],
+        receiver_private_key_pem = recipient_private_key
+    )
+
+    print(plain_text)
     
 
 
