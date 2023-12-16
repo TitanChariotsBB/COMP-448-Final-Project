@@ -49,6 +49,7 @@ def has_info() -> bool:
         return os.stat(USER).st_size > 0
     except:
         print("ERROR: cannot find `user_info.json`")
+        print("Creating new `user_info.json`")
         print()
         return False
 
