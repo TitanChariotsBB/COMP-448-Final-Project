@@ -71,14 +71,15 @@ def decrypt_message(sender_public_key_pem, signature, encrypted_message,
         verify_message(sender_public_key, signature, to_verify)
     except:
         print("This message is not verified as from the expected sender")
-    # else:
-    # decrypt session key with RSA decrypt
-    session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
+        return ""
+    else:
+        # decrypt session key with RSA decrypt
+        session_key = crypto_backend.rsa_decrypt(receiver_private_key, encrypted_session_key)
 
-    # decrypt message with decrypted session key
-    plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
+        # decrypt message with decrypted session key
+        plaintext = crypto_backend.aes_decrypt(session_key, nonce, encrypted_message)
 
-    return plaintext
+        return plaintext
 
     
 
