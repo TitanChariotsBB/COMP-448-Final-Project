@@ -272,7 +272,10 @@ def fetch_message():
                 message_found = True
                 message = content
                 lines = message.split("\n")
-                sender = lines[2].replace("SENDER: ", "").strip().replace("\n", "")
+                try:
+                    sender = lines[2].replace("SENDER: ", "").strip().replace("\n", "")
+                except:
+                    break
                 json_bundle = json.loads(lines[3])
                 break
         id -= 1
