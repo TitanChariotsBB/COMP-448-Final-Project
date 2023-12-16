@@ -12,7 +12,7 @@ To run, type: `python user_interface.py`. Upon initial installation, the program
 
 ### Important Note!
 
-This app will **only** work on the *Grove City College network*, as it relies on Professor Johnson's pastebin server and API. (The app could be refactored to use some other pastebin API fairly easily.)
+This app will **only** work on the *Grove City College network*, as it relies on Professor Johnson's pastebin server and API. (The app could be refactored to use some other pastebin site fairly easily.)
 
 ## Screenshot
 
