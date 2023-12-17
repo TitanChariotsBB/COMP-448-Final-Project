@@ -346,6 +346,7 @@ def main():
             reset_data()
             initialize_user()
             load_user_info()
+            load_contacts()
         elif action == P:
             publish_info()
         elif action == A:
