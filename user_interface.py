@@ -354,6 +354,7 @@ def main():
             list_contacts()
         elif action == D:
             remove_contact()
+            write_contacts()
         elif action == S:
             send_message()
         elif action == F:
