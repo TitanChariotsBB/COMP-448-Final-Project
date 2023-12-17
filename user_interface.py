@@ -124,8 +124,6 @@ def load_contacts():
         lines = f.readlines()
         for line in lines:
             contacts.append(json.loads(line))
-    else:
-        contacts = []
 
 def write_contacts():
     f = open(CONTACTS, 'w')
@@ -348,7 +346,6 @@ def main():
             reset_data()
             initialize_user()
             load_user_info()
-            load_contacts()
         elif action == P:
             publish_info()
         elif action == A:
