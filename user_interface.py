@@ -124,6 +124,8 @@ def load_contacts():
         lines = f.readlines()
         for line in lines:
             contacts.append(json.loads(line))
+    else:
+        open(CONTACTS, 'w+').close()
 
 def write_contacts():
     f = open(CONTACTS, 'w')
